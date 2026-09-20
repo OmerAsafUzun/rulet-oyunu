@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casino Rulet & UC/Robux Takas</title>
 
-    <!-- ADSTERRA REKLAM KODLARI -->
-    <script src="https://pl31433247.profitableratecpmnetwork.com/2e/6a/8f/2e6a8f8455ea6038b0126e6d0d84c499.js"></script>
-    <script src="https://pl31433248.profitableratecpmnetwork.com/55/06/21/55062177dea93aaa59bd929661c64fd2.js"></script>
-
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -154,6 +150,33 @@
             font-weight: bold;
             margin-top: 10px;
         }
+
+        /* Reklam Modal / Popup Kutusu */
+        .ad-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .ad-box {
+            background: #181b20;
+            border: 2px solid #ffd700;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 350px;
+            width: 80%;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+        }
+        .timer-circle {
+            font-size: 40px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -173,7 +196,7 @@
 
     <!-- 1. SEKME: RULET VE REKLAM -->
     <div id="roulette-tab" class="tab-content active">
-        <button id="ad-btn" class="btn" style="width: 100%;" onclick="watchAd()">🎬 Reklam İzle (+0.1 Coin)</button>
+        <button id="ad-btn" class="btn" style="width: 100%; font-size: 18px; padding: 15px;" onclick="startRewardAd()">🎬 Reklam İzle (+0.1 Coin)</button>
         <p id="ad-status" style="color: #aaa; font-size: 13px; margin-top: 5px;"></p>
 
         <div class="wheel-container">
@@ -184,7 +207,6 @@
         <div class="bet-area">
             <input type="number" id="bet-amount" value="0.1" min="0.1" step="0.1" placeholder="Bahis Miktarı"><br>
             
-            <!-- Bahis Türleri Seçenekleri -->
             <div class="bet-grid">
                 <button class="btn-bet btn-red" onclick="selectBet('red', 'x2', this)">Kırmızı (x2)</button>
                 <button class="btn-bet btn-black" onclick="selectBet('black', 'x2', this)">Siyah (x2)</button>
@@ -199,7 +221,6 @@
                 <button class="btn-bet btn-green" onclick="selectBet('green', 'x14', this)">Yeşil 0 (x14)</button>
             </div>
 
-            <!-- Tekil Sayı Seçimi -->
             <div style="margin-bottom: 15px;">
                 <label style="font-size: 13px; color: #aaa;">Veya Özel Sayı Seç (x36 Katı):</label><br>
                 <select id="single-number-select" onchange="selectSingleNumber(this.value)">
@@ -246,6 +267,16 @@
     </div>
 </div>
 
+<!-- Reklam İzleme Popup Penceresi -->
+<div id="ad-modal" class="ad-modal">
+    <div class="ad-box">
+        <h3>🎬 Ödüllü Reklam</h3>
+        <p style="font-size: 13px; color: #aaa;">Ödülü kazanmak için 30 saniye boyunca sayfayı kapatmayın.</p>
+        <div id="ad-timer" class="timer-circle">30</div>
+        <p style="font-size: 12px; color: #ffd700;">Reklam penceresi açılıyor...</p>
+    </div>
+</div>
+
 <script>
     let coins = 0.00;
     let selectedBetType = null;
@@ -269,7 +300,38 @@
         element.classList.add('active');
     }
 
-    // Rulet Mantığı
+    // 30 SANİYELİK REKLAM İZLEME MANTIĞI
+    function startRewardAd() {
+        let modal = document.getElementById('ad-modal');
+        let timerElem = document.getElementById('ad-timer');
+        let btn = document.getElementById('ad-btn');
+        let status = document.getElementById('ad-status');
+
+        btn.disabled = true;
+        modal.style.display = 'flex';
+        let timeLeft = 30;
+        timerElem.innerText = timeLeft;
+
+        // Adsterra Reklam Bağlantısını Açma (Tıklama ile tetikleme)
+        window.open("https://www.profitablecpmrate.com/2e6a8f8455ea6038b0126e6d0d84c499", "_blank");
+
+        let adInterval = setInterval(() => {
+            timeLeft--;
+            timerElem.innerText = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(adInterval);
+                modal.style.display = 'none';
+                coins += 0.1;
+                updateBalance();
+                status.innerText = "🎉 Tebrikler! 30 saniyelik reklam izleme tamamlandı (+0.1 Coin).";
+                status.style.color = "#38b000";
+                btn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    // Rulet Çarkı Çizimi ve Oyun Mantığı
     const numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     const canvas = document.getElementById('rouletteWheel');
@@ -306,25 +368,6 @@
 
     function updateBalance() {
         document.getElementById('coin-balance').innerText = coins.toFixed(2);
-    }
-
-    function watchAd() {
-        let btn = document.getElementById('ad-btn');
-        let status = document.getElementById('ad-status');
-        btn.disabled = true;
-        let timeLeft = 3;
-        status.innerText = "Reklam izleniyor... (" + timeLeft + "s)";
-        let timer = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) status.innerText = "Reklam izleniyor... (" + timeLeft + "s)";
-            else {
-                clearInterval(timer);
-                coins += 0.1;
-                updateBalance();
-                status.innerText = "Tebrikler! +0.1 Coin kazandın.";
-                btn.disabled = false;
-            }
-        }, 1000);
     }
 
     function selectBet(type, multiplier, element) {
@@ -384,7 +427,6 @@
                 let won = false;
                 let multiplier = 0;
 
-                // Kazanç Kontrolleri
                 if (selectedBetType === 'green' && isGreen) { won = true; multiplier = 14; }
                 else if (selectedBetType === 'red' && isRed) { won = true; multiplier = 2; }
                 else if (selectedBetType === 'black' && !isRed && !isGreen) { won = true; multiplier = 2; }
@@ -412,7 +454,6 @@
         rotate();
     }
 
-    // Takas/Mağaza Satın Alma Mantığı
     function buyReward(itemName, cost) {
         let shopStatus = document.getElementById('shop-status');
 
