@@ -129,6 +129,16 @@
             justify-content: space-between;
             align-items: center;
         }
+        .btn-form {
+            display: block;
+            text-decoration: none;
+            background: #007bff;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -191,8 +201,13 @@
 
         <div style="background: #111317; padding: 15px; border-radius: 10px; margin-top: 20px;">
             <h4>📩 Çekim Talebi Formu</h4>
-            <input type="text" id="player-id" placeholder="Oyuncu ID / Kullanıcı Adı"><br>
-            <p id="shop-status" style="font-size: 14px; font-weight: bold;"></p>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">Coin bakiyeniz yeterliyse aşağıdaki butona basıp Oyuncu ID'nizi bize iletin.</p>
+            
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfKUgT9gtE5sa0G3NUoe4GsYb0AvEs5Hun19ztVPtTNuXDE6Q/viewform?usp=publish-editor" target="_blank" class="btn-form">
+                📝 Google Form ile ID Gönder
+            </a>
+            
+            <p id="shop-status" style="font-size: 14px; font-weight: bold; margin-top: 10px;"></p>
         </div>
     </div>
 </div>
@@ -327,24 +342,17 @@
 
     // Takas/Mağaza Satın Alma Mantığı
     function buyReward(itemName, cost) {
-        let playerId = document.getElementById('player-id').value;
         let shopStatus = document.getElementById('shop-status');
 
-        if (!playerId) {
-            shopStatus.innerText = "⚠️ Lütfen önce Oyuncu ID alanını doldurun!";
-            shopStatus.style.color = "#ffc107";
-            return;
-        }
-
         if (coins < cost) {
-            shopStatus.innerText = "❌ Yetersiz bakiye! Daha fazla coin biriktir.";
+            shopStatus.innerText = `❌ Yetersiz bakiye! ${itemName} almak için en az ${cost} Coin gerekir.`;
             shopStatus.style.color = "#e63946";
             return;
         }
 
         coins -= cost;
         updateBalance();
-        shopStatus.innerText = `✅ Talebiniz alındı! ${itemName} en kısa sürede ${playerId} hesabına gönderilecek.`;
+        shopStatus.innerText = `✅ İşlem Başarılı! Lütfen yukarıdaki "Google Form ile ID Gönder" butonuna tıklayarak Oyuncu ID'nizi bize iletin.`;
         shopStatus.style.color = "#38b000";
     }
 </script>
