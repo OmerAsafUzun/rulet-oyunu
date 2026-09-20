@@ -358,7 +358,7 @@
         shopStatus.style.color = "#38b000";
     }
 
-    // RULET MEKANİĞİ
+    // RULET MEKANİĞİ VE İBRE HİZALAMA DÜZELTMESİ
     let selectedBetType = null;
     let selectedNumber = null;
     let isSpinning = false;
@@ -430,22 +430,25 @@
 
         if (!selectedBetType || isNaN(betInput) || betInput <= 0) {
             gameStatus.innerText = "⚠️ Bahis türü ve miktar seçin!";
+            gameStatus.style.color = "#ffd700";
             return;
         }
         if (betInput > coins) {
             gameStatus.innerText = "❌ Yetersiz bakiye!";
+            gameStatus.style.color = "#e63946";
             return;
         }
 
-        // POPUNDER: Çark çevrilince reklam açılır
+        // POPUNDER: Çark dönünce arka planda reklam açar
         window.open(directLinkUrl, '_blank');
 
         coins -= betInput;
         setCoins(coins);
         isSpinning = true;
         gameStatus.innerText = "🎰 Çark dönüyor...";
+        gameStatus.style.color = "#ffffff";
 
-        let spinAngleStart = Math.random() * 10 + 20;
+        let spinAngleStart = Math.random() * 10 + 25;
         let spinTime = 0;
         let spinTimeTotal = 4000;
 
@@ -453,19 +456,27 @@
             spinTime += 30;
             if (spinTime >= spinTimeTotal) {
                 isSpinning = false;
-                let degrees = (currentAngle * 180 / Math.PI) % 360;
-                let aradiusAngle = (360 - degrees + 270) % 360;
-                let index = Math.floor(aradiusAngle / (360 / numbers.length));
+                
+                // Tam İbre Açı Hesabı (Üst İbre)
+                const numSlices = numbers.length;
+                const sliceAngle = (2 * Math.PI) / numSlices;
+                
+                let normalizedAngle = (currentAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                let pointerAngle = (1.5 * Math.PI - normalizedAngle + 2 * Math.PI) % (2 * Math.PI);
+                
+                let index = Math.floor(pointerAngle / sliceAngle) % numSlices;
                 let winningNumber = numbers[index];
+                
                 let isRed = redNumbers.includes(winningNumber);
                 let isGreen = (winningNumber === 0);
+                let isBlack = !isRed && !isGreen;
 
                 let won = false;
                 let multiplier = 0;
 
                 if (selectedBetType === 'green' && isGreen) { won = true; multiplier = 14; }
                 else if (selectedBetType === 'red' && isRed) { won = true; multiplier = 2; }
-                else if (selectedBetType === 'black' && !isRed && !isGreen) { won = true; multiplier = 2; }
+                else if (selectedBetType === 'black' && isBlack) { won = true; multiplier = 2; }
                 else if (selectedBetType === 'even' && winningNumber !== 0 && winningNumber % 2 === 0) { won = true; multiplier = 2; }
                 else if (selectedBetType === 'odd' && winningNumber % 2 !== 0) { won = true; multiplier = 2; }
                 else if (selectedBetType === 'col1' && winningNumber >= 1 && winningNumber <= 12) { won = true; multiplier = 3; }
@@ -473,16 +484,24 @@
                 else if (selectedBetType === 'col3' && winningNumber >= 25 && winningNumber <= 36) { won = true; multiplier = 3; }
                 else if (selectedBetType === 'single' && selectedNumber === winningNumber) { won = true; multiplier = 36; }
 
+                let colorText = isGreen ? "Yeşil" : (isRed ? "Kırmızı" : "Siyah");
+
                 if (won) {
                     let winAmount = betInput * multiplier;
                     setCoins(getCoins() + winAmount);
-                    gameStatus.innerText = `🎉 KAZANDIN! Sayı: ${winningNumber} (+${winAmount.toFixed(2)} Coin)`;
+                    gameStatus.innerText = `🎉 KAZANDIN! Sayı: ${winningNumber} (${colorText}) - (+${winAmount.toFixed(2)} Coin)`;
+                    gameStatus.style.color = "#38b000";
                 } else {
-                    gameStatus.innerText = `💥 KAYBETTİN! Sayı: ${winningNumber}`;
+                    gameStatus.innerText = `💥 KAYBETTİN! Sayı: ${winningNumber} (${colorText})`;
+                    gameStatus.style.color = "#e63946";
                 }
                 return;
             }
-            currentAngle += ((spinAngleStart - (spinTime / spinTimeTotal) * spinAngleStart) * Math.PI / 180);
+            
+            let progress = spinTime / spinTimeTotal;
+            let easeOut = Math.pow(1 - progress, 3);
+            currentAngle += (spinAngleStart * easeOut) * Math.PI / 180;
+            
             drawWheel();
             requestAnimationFrame(rotate);
         }
