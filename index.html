@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Rulet & UC/Robux Takas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f1115;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 550px;
+            margin: 0 auto;
+            background: #181b20;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border: 1px solid #2a2e37;
+        }
+        .balance-box {
+            background: linear-gradient(135deg, #1e222a, #252a34);
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 26px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 20px;
+            border: 1px solid #ffb70033;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #20242c;
+            border: 1px solid #3a3f4d;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #007bff;
+            border-color: #007bff;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+        .btn:disabled { background: #444; cursor: not-allowed; }
+        
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 15px auto;
+        }
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 24px solid #ffd700;
+            z-index: 10;
+        }
+        canvas {
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #2a2e37;
+        }
+        .bet-area {
+            background: #20242c;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        input[type="number"], input[type="text"] {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #3a3f4d;
+            background: #111317;
+            color: #ffd700;
+            font-size: 16px;
+            width: 80%;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .color-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .btn-red { background: #e63946; }
+        .btn-black { background: #212529; border: 1px solid #495057; }
+        .btn-green { background: #38b000; }
+        .selected { outline: 3px solid #ffd700; }
+
+        /* Mağaza Kartları */
+        .shop-item {
+            background: #20242c;
+            border: 1px solid #3a3f4d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🪙 Coin Oyunu & Mağaza</h2>
+    
+    <div class="balance-box">
+        💰 Bakiye: <span id="coin-balance">0.00</span> Coin
+    </div>
+
+    <!-- Sekme Butonları -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('roulette-tab', this)">🎰 Rulet & Kazan</button>
+        <button class="tab-btn" onclick="switchTab('shop-tab', this)">🎁 Takas / Mağaza</button>
+    </div>
+
+    <!-- 1. SEKME: RULET VE REKLAM -->
+    <div id="roulette-tab" class="tab-content active">
+        <button id="ad-btn" class="btn" style="width: 100%;" onclick="watchAd()">🎬 Reklam İzle (+0.1 Coin)</button>
+        <p id="ad-status" style="color: #aaa; font-size: 13px; margin-top: 5px;"></p>
+
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <canvas id="rouletteWheel" width="320" height="320"></canvas>
+        </div>
+
+        <div class="bet-area">
+            <input type="number" id="bet-amount" value="0.1" min="0.1" step="0.1" placeholder="Bahis"><br>
+            <div class="color-btns">
+                <button class="btn btn-red" onclick="selectColor('red', this)">Kırmızı (x2)</button>
+                <button class="btn btn-black" onclick="selectColor('black', this)">Siyah (x2)</button>
+                <button class="btn btn-green" onclick="selectColor('green', this)">Yeşil 0 (x14)</button>
+            </div>
+            <button id="spin-btn" class="btn" onclick="spinWheel()" style="width: 100%; background: #007bff;">🔥 ÇARKI ÇEVİR</button>
+        </div>
+        <p id="game-status" style="font-weight: bold; margin-top: 10px;"></p>
+    </div>
+
+    <!-- 2. SEKME: TAKAS VE MAĞAZA -->
+    <div id="shop-tab" class="tab-content">
+        <h3>🎁 UC ve Robux Takas Mağazası</h3>
+        <p style="font-size: 13px; color: #aaa;">Biriktirdiğin coinleri PUBG Mobile UC veya Roblox Robux ile takas et!</p>
+
+        <div class="shop-item">
+            <div style="text-align: left;">
+                <strong style="color: #f43f5e;">100 Roblox Robux</strong><br>
+                <small style="color: #ffd700;">Fiyat: 200 Coin</small>
+            </div>
+            <button class="btn" onclick="buyReward('100 Robux', 200)">Takas Et</button>
+        </div>
+
+        <div class="shop-item">
+            <div style="text-align: left;">
+                <strong style="color: #60a5fa;">120 PUBG Mobile UC</strong><br>
+                <small style="color: #ffd700;">Fiyat: 250 Coin</small>
+            </div>
+            <button class="btn" onclick="buyReward('120 PUBG UC', 250)">Takas Et</button>
+        </div>
+
+        <div style="background: #111317; padding: 15px; border-radius: 10px; margin-top: 20px;">
+            <h4>📩 Çekim Talebi Formu</h4>
+            <input type="text" id="player-id" placeholder="Oyuncu ID / Kullanıcı Adı"><br>
+            <p id="shop-status" style="font-size: 14px; font-weight: bold;"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let coins = 0.00;
+    let selectedColor = null;
+    let isSpinning = false;
+
+    // Sekme Değiştirme
+    function switchTab(tabId, element) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // Rulet Mantığı
+    const numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    const canvas = document.getElementById('rouletteWheel');
+    const ctx = canvas.getContext('2d');
+    let currentAngle = 0;
+
+    function drawWheel() {
+        const numSlices = numbers.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < numSlices; i++) {
+            const angle = currentAngle + i * sliceAngle;
+            const num = numbers[i];
+            ctx.fillStyle = (num === 0) ? '#38b000' : (redNumbers.includes(num) ? '#e63946' : '#212529');
+            
+            ctx.beginPath();
+            ctx.moveTo(160, 160);
+            ctx.arc(160, 160, 150, angle, angle + sliceAngle);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.save();
+            ctx.translate(160, 160);
+            ctx.rotate(angle + sliceAngle / 2);
+            ctx.textAlign = "right";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 11px Arial";
+            ctx.fillText(num, 140, 4);
+            ctx.restore();
+        }
+    }
+    drawWheel();
+
+    function updateBalance() {
+        document.getElementById('coin-balance').innerText = coins.toFixed(2);
+    }
+
+    function watchAd() {
+        let btn = document.getElementById('ad-btn');
+        let status = document.getElementById('ad-status');
+        btn.disabled = true;
+        let timeLeft = 3;
+        status.innerText = "Reklam izleniyor... (" + timeLeft + "s)";
+        let timer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) status.innerText = "Reklam izleniyor... (" + timeLeft + "s)";
+            else {
+                clearInterval(timer);
+                coins += 0.1;
+                updateBalance();
+                status.innerText = "Tebrikler! +0.1 Coin kazandın.";
+                btn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    function selectColor(color, element) {
+        if(isSpinning) return;
+        selectedColor = color;
+        document.querySelectorAll('.color-btns .btn').forEach(b => b.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function spinWheel() {
+        if (isSpinning) return;
+        let betInput = parseFloat(document.getElementById('bet-amount').value);
+        let gameStatus = document.getElementById('game-status');
+
+        if (!selectedColor || isNaN(betInput) || betInput <= 0) {
+            gameStatus.innerText = "⚠️ Renk ve geçerli bahis girin!";
+            return;
+        }
+        if (betInput > coins) {
+            gameStatus.innerText = "❌ Yetersiz bakiye!";
+            return;
+        }
+
+        coins -= betInput;
+        updateBalance();
+        isSpinning = true;
+        gameStatus.innerText = "🎰 Çark dönüyor...";
+
+        let spinAngleStart = Math.random() * 10 + 20;
+        let spinTime = 0;
+        let spinTimeTotal = 4000;
+
+        function rotate() {
+            spinTime += 30;
+            if (spinTime >= spinTimeTotal) {
+                isSpinning = false;
+                let degrees = (currentAngle * 180 / Math.PI) % 360;
+                let aradiusAngle = (360 - degrees + 270) % 360;
+                let index = Math.floor(aradiusAngle / (360 / numbers.length));
+                let winningNumber = numbers[index];
+                let winningColor = (winningNumber === 0) ? 'green' : (redNumbers.includes(winningNumber) ? 'red' : 'black');
+
+                if (selectedColor === winningColor) {
+                    let winAmount = betInput * ((winningColor === 'green') ? 14 : 2);
+                    coins += winAmount;
+                    updateBalance();
+                    gameStatus.innerText = `🎉 KAZANDIN! Sayı: ${winningNumber}`;
+                } else {
+                    gameStatus.innerText = `💥 KAYBETTİN! Sayı: ${winningNumber}`;
+                }
+                return;
+            }
+            currentAngle += ((spinAngleStart - (spinTime / spinTimeTotal) * spinAngleStart) * Math.PI / 180);
+            drawWheel();
+            requestAnimationFrame(rotate);
+        }
+        rotate();
+    }
+
+    // Takas/Mağaza Satın Alma Mantığı
+    function buyReward(itemName, cost) {
+        let playerId = document.getElementById('player-id').value;
+        let shopStatus = document.getElementById('shop-status');
+
+        if (!playerId) {
+            shopStatus.innerText = "⚠️ Lütfen önce Oyuncu ID alanını doldurun!";
+            shopStatus.style.color = "#ffc107";
+            return;
+        }
+
+        if (coins < cost) {
+            shopStatus.innerText = "❌ Yetersiz bakiye! Daha fazla coin biriktir.";
+            shopStatus.style.color = "#e63946";
+            return;
+        }
+
+        coins -= cost;
+        updateBalance();
+        shopStatus.innerText = `✅ Talebiniz alındı! ${itemName} en kısa sürede ${playerId} hesabına gönderilecek.`;
+        shopStatus.style.color = "#38b000";
+    }
+</script>
+
+</body>
+</html>
