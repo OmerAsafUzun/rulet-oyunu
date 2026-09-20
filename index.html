@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casino Rulet & UC/Robux Takas</title>
-    <meta name="monetag" content="9cd76a512e44d07899816b0500f0471f">
+
+    <!-- ADSTERRA REKLAM KODLARI -->
+    <script src="https://pl31433247.profitableratecpmnetwork.com/2e/6a/8f/2e6a8f8455ea6038b0126e6d0d84c499.js"></script>
+    <script src="https://pl31433248.profitableratecpmnetwork.com/55/06/21/55062177dea93aaa59bd929661c64fd2.js"></script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,7 +19,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 550px;
+            max-width: 600px;
             margin: 0 auto;
             background: #181b20;
             padding: 25px;
@@ -61,7 +65,7 @@
             color: white;
             border: none;
             padding: 12px 20px;
-            font-size: 16px;
+            font-size: 15px;
             border-radius: 8px;
             cursor: pointer;
             transition: 0.2s;
@@ -97,27 +101,37 @@
             border-radius: 12px;
             margin-top: 15px;
         }
-        input[type="number"], input[type="text"] {
+        input[type="number"], select {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #3a3f4d;
             background: #111317;
             color: #ffd700;
-            font-size: 16px;
-            width: 80%;
+            font-size: 15px;
+            width: 85%;
             margin-bottom: 10px;
             text-align: center;
         }
-        .color-btns {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 15px;
+        .bet-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .btn-bet {
+            background: #2a2e37;
+            border: 1px solid #3a3f4d;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
         }
         .btn-red { background: #e63946; }
         .btn-black { background: #212529; border: 1px solid #495057; }
-        .btn-green { background: #38b000; }
-        .selected { outline: 3px solid #ffd700; }
+        .btn-green { background: #38b000; grid-column: span 2; }
+        .selected { outline: 3px solid #ffd700; border-color: #ffd700; }
 
         /* Mağaza Kartları */
         .shop-item {
@@ -168,12 +182,31 @@
         </div>
 
         <div class="bet-area">
-            <input type="number" id="bet-amount" value="0.1" min="0.1" step="0.1" placeholder="Bahis"><br>
-            <div class="color-btns">
-                <button class="btn btn-red" onclick="selectColor('red', this)">Kırmızı (x2)</button>
-                <button class="btn btn-black" onclick="selectColor('black', this)">Siyah (x2)</button>
-                <button class="btn btn-green" onclick="selectColor('green', this)">Yeşil 0 (x14)</button>
+            <input type="number" id="bet-amount" value="0.1" min="0.1" step="0.1" placeholder="Bahis Miktarı"><br>
+            
+            <!-- Bahis Türleri Seçenekleri -->
+            <div class="bet-grid">
+                <button class="btn-bet btn-red" onclick="selectBet('red', 'x2', this)">Kırmızı (x2)</button>
+                <button class="btn-bet btn-black" onclick="selectBet('black', 'x2', this)">Siyah (x2)</button>
+                
+                <button class="btn-bet" onclick="selectBet('even', 'x2', this)">Çift Sayılar (x2)</button>
+                <button class="btn-bet" onclick="selectBet('odd', 'x2', this)">Tek Sayılar (x2)</button>
+                
+                <button class="btn-bet" onclick="selectBet('col1', 'x3', this)">1. Dize (1-12) (x3)</button>
+                <button class="btn-bet" onclick="selectBet('col2', 'x3', this)">2. Dize (13-24) (x3)</button>
+                <button class="btn-bet" onclick="selectBet('col3', 'x3', this)" style="grid-column: span 2;">3. Dize (25-36) (x3)</button>
+
+                <button class="btn-bet btn-green" onclick="selectBet('green', 'x14', this)">Yeşil 0 (x14)</button>
             </div>
+
+            <!-- Tekil Sayı Seçimi -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 13px; color: #aaa;">Veya Özel Sayı Seç (x36 Katı):</label><br>
+                <select id="single-number-select" onchange="selectSingleNumber(this.value)">
+                    <option value="">-- Sayı Seçilmedi --</option>
+                </select>
+            </div>
+
             <button id="spin-btn" class="btn" onclick="spinWheel()" style="width: 100%; background: #007bff;">🔥 ÇARKI ÇEVİR</button>
         </div>
         <p id="game-status" style="font-weight: bold; margin-top: 10px;"></p>
@@ -215,8 +248,18 @@
 
 <script>
     let coins = 0.00;
-    let selectedColor = null;
+    let selectedBetType = null;
+    let selectedNumber = null;
     let isSpinning = false;
+
+    // Özel Sayı Seçeneği Doldurma (0-36)
+    const selectElem = document.getElementById('single-number-select');
+    for (let i = 0; i <= 36; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = "Sayı " + i + " (x36)";
+        selectElem.appendChild(opt);
+    }
 
     // Sekme Değiştirme
     function switchTab(tabId, element) {
@@ -284,11 +327,24 @@
         }, 1000);
     }
 
-    function selectColor(color, element) {
+    function selectBet(type, multiplier, element) {
         if(isSpinning) return;
-        selectedColor = color;
-        document.querySelectorAll('.color-btns .btn').forEach(b => b.classList.remove('selected'));
+        selectedBetType = type;
+        selectedNumber = null;
+        document.getElementById('single-number-select').value = "";
+        document.querySelectorAll('.btn-bet').forEach(b => b.classList.remove('selected'));
         element.classList.add('selected');
+    }
+
+    function selectSingleNumber(val) {
+        if(isSpinning) return;
+        if(val === "") {
+            selectedNumber = null;
+            return;
+        }
+        selectedNumber = parseInt(val);
+        selectedBetType = 'single';
+        document.querySelectorAll('.btn-bet').forEach(b => b.classList.remove('selected'));
     }
 
     function spinWheel() {
@@ -296,8 +352,8 @@
         let betInput = parseFloat(document.getElementById('bet-amount').value);
         let gameStatus = document.getElementById('game-status');
 
-        if (!selectedColor || isNaN(betInput) || betInput <= 0) {
-            gameStatus.innerText = "⚠️ Renk ve geçerli bahis girin!";
+        if (!selectedBetType || isNaN(betInput) || betInput <= 0) {
+            gameStatus.innerText = "⚠️ Bahis türü/sayı ve geçerli miktar seçin!";
             return;
         }
         if (betInput > coins) {
@@ -322,13 +378,28 @@
                 let aradiusAngle = (360 - degrees + 270) % 360;
                 let index = Math.floor(aradiusAngle / (360 / numbers.length));
                 let winningNumber = numbers[index];
-                let winningColor = (winningNumber === 0) ? 'green' : (redNumbers.includes(winningNumber) ? 'red' : 'black');
+                let isRed = redNumbers.includes(winningNumber);
+                let isGreen = (winningNumber === 0);
 
-                if (selectedColor === winningColor) {
-                    let winAmount = betInput * ((winningColor === 'green') ? 14 : 2);
+                let won = false;
+                let multiplier = 0;
+
+                // Kazanç Kontrolleri
+                if (selectedBetType === 'green' && isGreen) { won = true; multiplier = 14; }
+                else if (selectedBetType === 'red' && isRed) { won = true; multiplier = 2; }
+                else if (selectedBetType === 'black' && !isRed && !isGreen) { won = true; multiplier = 2; }
+                else if (selectedBetType === 'even' && winningNumber !== 0 && winningNumber % 2 === 0) { won = true; multiplier = 2; }
+                else if (selectedBetType === 'odd' && winningNumber % 2 !== 0) { won = true; multiplier = 2; }
+                else if (selectedBetType === 'col1' && winningNumber >= 1 && winningNumber <= 12) { won = true; multiplier = 3; }
+                else if (selectedBetType === 'col2' && winningNumber >= 13 && winningNumber <= 24) { won = true; multiplier = 3; }
+                else if (selectedBetType === 'col3' && winningNumber >= 25 && winningNumber <= 36) { won = true; multiplier = 3; }
+                else if (selectedBetType === 'single' && selectedNumber === winningNumber) { won = true; multiplier = 36; }
+
+                if (won) {
+                    let winAmount = betInput * multiplier;
                     coins += winAmount;
                     updateBalance();
-                    gameStatus.innerText = `🎉 KAZANDIN! Sayı: ${winningNumber}`;
+                    gameStatus.innerText = `🎉 KAZANDIN! Sayı: ${winningNumber} (+${winAmount.toFixed(2)} Coin)`;
                 } else {
                     gameStatus.innerText = `💥 KAYBETTİN! Sayı: ${winningNumber}`;
                 }
